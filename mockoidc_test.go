@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/oauth2-proxy/mockoidc"
 	"github.com/stretchr/testify/assert"
+	"github.com/xrstf/mockoidc"
 )
 
 const TestNow = 1234567890

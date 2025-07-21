@@ -13,16 +13,16 @@ Forked by @xrstf in 2025 to include/fix:
 * https://github.com/oauth2-proxy/mockoidc/pull/51
 * https://github.com/oauth2-proxy/mockoidc/issues/37
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/oauth2-proxy/mockoidc)](https://goreportcard.com/report/github.com/oauth2-proxy/mockoidc)
+[![Go Report Card](https://goreportcard.com/badge/github.com/xrstf/mockoidc)](https://goreportcard.com/report/github.com/xrstf/mockoidc)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Maintainability](https://api.codeclimate.com/v1/badges/99c0561090d1002dc7e3/maintainability)](https://codeclimate.com/github/oauth2-proxy/mockoidc/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/99c0561090d1002dc7e3/test_coverage)](https://codeclimate.com/github/oauth2-proxy/mockoidc/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/99c0561090d1002dc7e3/maintainability)](https://codeclimate.com/github/xrstf/mockoidc/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/99c0561090d1002dc7e3/test_coverage)](https://codeclimate.com/github/xrstf/mockoidc/test_coverage)
 
 ## Usage
 
 Import the package
 ```go
-import "github.com/oauth2-proxy/mockoidc"
+import "github.com/xrstf/mockoidc"
 ```
 
 Start the MockOIDC Server. This will spin up a minimal OIDC server in its own
