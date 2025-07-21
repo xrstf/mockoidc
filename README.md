@@ -7,11 +7,11 @@ Created by @NickMeves and @egrif during the [Greenhouse Software](https://medium
 
 Forked by @xrstf in 2025 to include/fix:
 
-* https://github.com/oauth2-proxy/mockoidc/pull/45
-* https://github.com/oauth2-proxy/mockoidc/pull/48
-* https://github.com/oauth2-proxy/mockoidc/pull/58
-* https://github.com/oauth2-proxy/mockoidc/pull/51
-* https://github.com/oauth2-proxy/mockoidc/issues/37
+* [Support sub in userinfo field](https://github.com/oauth2-proxy/mockoidc/pull/45)
+* [Ignore ordering of openid token in scope parameter](https://github.com/oauth2-proxy/mockoidc/pull/48)
+* [Bump go-jose to 3.0.3](https://github.com/oauth2-proxy/mockoidc/pull/58)
+* [Syntax highlighting in readme](https://github.com/oauth2-proxy/mockoidc/pull/51)
+* [TLS configuration does not work](https://github.com/oauth2-proxy/mockoidc/issues/37)
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/xrstf/mockoidc)](https://goreportcard.com/report/github.com/xrstf/mockoidc)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
