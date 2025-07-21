@@ -94,7 +94,12 @@ func RunTLS(cfg *tls.Config) (*MockOIDC, error) {
 	if err != nil {
 		return nil, err
 	}
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	var ln net.Listener
+	if cfg == nil {
+		ln, err = net.Listen("tcp", "127.0.0.1:0")
+	} else {
+		ln, err = tls.Listen("tcp", "127.0.0.1:0", cfg)
+	}
 	if err != nil {
 		return nil, err
 	}

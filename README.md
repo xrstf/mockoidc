@@ -32,7 +32,7 @@ cfg := m.Config()
 //   	ClientID     string
 //   	ClientSecret string
 //   	Issuer       string
-//   
+//
 //   	AccessTTL  time.Duration
 //   	RefreshTTL time.Duration
 // }
@@ -44,7 +44,7 @@ Alternatively, if you provide your own `tls.Config`, the server can run with
 TLS:
 
 ```
-tlsConfig = &tls.Config{
+tlsConfig := &tls.Config{
     // ...your TLS settings
 }
 
@@ -165,9 +165,9 @@ rsaKey, _ := rsa.GenerateKey(rand.Reader, 2048)
 m, _ := mockoidc.NewServer(rsaKey)
 
 // Create the net.Listener on the exact IP:Port you want
-ln, _ := net.Listen("tcp", "127.0.0.1:8080")
+ln, _ := tls.Listen("tcp", "127.0.0.1:8080")
 
-tlsConfig = &tls.Config{
+tlsConfig := &tls.Config{
     // ...your TLS settings
 }
 
