@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -111,7 +111,7 @@ func TestRun(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err)
 
 	tokens := make(map[string]interface{})
@@ -173,7 +173,7 @@ func TestRun(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	defer resp.Body.Close()
-	refreshBody, err := ioutil.ReadAll(resp.Body)
+	refreshBody, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err)
 
 	refreshedTokens := make(map[string]interface{})

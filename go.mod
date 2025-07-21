@@ -1,6 +1,6 @@
 module github.com/xrstf/mockoidc
 
-go 1.21
+go 1.22
 
 require (
 	github.com/go-jose/go-jose/v3 v3.0.3

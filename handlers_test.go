@@ -2,7 +2,7 @@ package mockoidc_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -94,7 +94,7 @@ func TestMockOIDC_Token_CodeGrant(t *testing.T) {
 			rr := testResponse(t, mockoidc.TokenEndpoint, m.Token, http.MethodPost, badData)
 			assert.Equal(t, http.StatusBadRequest, rr.Code)
 
-			body, err := ioutil.ReadAll(rr.Body)
+			body, err := io.ReadAll(rr.Body)
 			assert.NoError(t, err)
 			assert.Contains(t, string(body), mockoidc.InvalidRequest)
 		})
@@ -180,7 +180,7 @@ func TestMockOIDC_Token_CodeGrant_CodeChallengePlain(t *testing.T) {
 	rr = testResponse(t, mockoidc.TokenEndpoint, m.Token, http.MethodPost, badData)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 
-	body, err := ioutil.ReadAll(rr.Body)
+	body, err := io.ReadAll(rr.Body)
 	assert.NoError(t, err)
 	assert.Contains(t, string(body), mockoidc.InvalidGrant)
 
@@ -191,7 +191,7 @@ func TestMockOIDC_Token_CodeGrant_CodeChallengePlain(t *testing.T) {
 	rr = testResponse(t, mockoidc.TokenEndpoint, m.Token, http.MethodPost, badData)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 
-	body, err = ioutil.ReadAll(rr.Body)
+	body, err = io.ReadAll(rr.Body)
 	assert.NoError(t, err)
 	assert.Contains(t, string(body), mockoidc.InvalidGrant)
 }
@@ -230,7 +230,7 @@ func TestMockOIDC_Token_CodeGrant_CodeChallengeHash(t *testing.T) {
 	rr = testResponse(t, mockoidc.TokenEndpoint, m.Token, http.MethodPost, badData)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 
-	body, err := ioutil.ReadAll(rr.Body)
+	body, err := io.ReadAll(rr.Body)
 	assert.NoError(t, err)
 	assert.Contains(t, string(body), mockoidc.InvalidGrant)
 
@@ -241,7 +241,7 @@ func TestMockOIDC_Token_CodeGrant_CodeChallengeHash(t *testing.T) {
 	rr = testResponse(t, mockoidc.TokenEndpoint, m.Token, http.MethodPost, badData)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 
-	body, err = ioutil.ReadAll(rr.Body)
+	body, err = io.ReadAll(rr.Body)
 	assert.NoError(t, err)
 	assert.Contains(t, string(body), mockoidc.InvalidGrant)
 }
@@ -297,7 +297,7 @@ func TestMockOIDC_Token_RefreshGrant(t *testing.T) {
 	rr = testResponse(t, mockoidc.TokenEndpoint, m.Token, http.MethodPost, data)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 
-	body, err := ioutil.ReadAll(rr.Body)
+	body, err := io.ReadAll(rr.Body)
 	assert.NoError(t, err)
 	assert.Contains(t, string(body), mockoidc.InvalidRequest)
 }
