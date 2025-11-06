@@ -9,6 +9,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 // NowFunc is an overrideable version of `time.Now`. Tests that need to
@@ -35,6 +37,7 @@ type MockOIDC struct {
 	ErrorQueue   *ErrorQueue
 
 	tlsConfig   *tls.Config
+	listener    net.Listener
 	middleware  []func(http.Handler) http.Handler
 	fastForward time.Duration
 }
@@ -52,10 +55,21 @@ type Config struct {
 	CodeChallengeMethodsSupported []string
 }
 
+type ServerConfig struct {
+	Key       *rsa.PrivateKey
+	TLSConfig *tls.Config
+	Listener  net.Listener
+}
+
 // NewServer configures a new MockOIDC that isn't started. An existing
 // rsa.PrivateKey can be passed for token signing operations in case
 // the default Keypair isn't desired.
-func NewServer(key *rsa.PrivateKey) (*MockOIDC, error) {
+func NewServer(serverConfig *ServerConfig) (*MockOIDC, error) {
+	// to allow nil initialization for tests and simple use cases.
+	if serverConfig == nil {
+		serverConfig = &ServerConfig{}
+	}
+
 	clientID, err := randomNonce(24)
 	if err != nil {
 		return nil, err
@@ -64,9 +78,24 @@ func NewServer(key *rsa.PrivateKey) (*MockOIDC, error) {
 	if err != nil {
 		return nil, err
 	}
+	key := serverConfig.Key
 	keypair, err := NewKeypair(key)
 	if err != nil {
 		return nil, err
+	}
+
+	var ln net.Listener
+	if serverConfig.Listener == nil {
+		if serverConfig.TLSConfig == nil {
+			ln, err = net.Listen("tcp", "127.0.0.1:0")
+		} else {
+			ln, err = tls.Listen("tcp", "127.0.0.1:0", serverConfig.TLSConfig)
+		}
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		ln = serverConfig.Listener
 	}
 
 	return &MockOIDC{
@@ -79,6 +108,7 @@ func NewServer(key *rsa.PrivateKey) (*MockOIDC, error) {
 		SessionStore:                  NewSessionStore(),
 		UserQueue:                     &UserQueue{},
 		ErrorQueue:                    &ErrorQueue{},
+		listener:                      ln,
 	}, nil
 }
 
@@ -94,16 +124,15 @@ func RunTLS(cfg *tls.Config) (*MockOIDC, error) {
 	if err != nil {
 		return nil, err
 	}
-	var ln net.Listener
-	if cfg == nil {
-		ln, err = net.Listen("tcp", "127.0.0.1:0")
-	} else {
-		ln, err = tls.Listen("tcp", "127.0.0.1:0", cfg)
-	}
-	if err != nil {
-		return nil, err
-	}
-	return m, m.Start(ln, cfg)
+	return m, m.Start(m.listener, cfg)
+}
+
+func (m *MockOIDC) AddRoutes(mux *mux.Router) {
+	mux.Handle(AuthorizationEndpoint, m.chainMiddleware(m.Authorize))
+	mux.Handle(TokenEndpoint, m.chainMiddleware(m.Token))
+	mux.Handle(UserinfoEndpoint, m.chainMiddleware(m.Userinfo))
+	mux.Handle(JWKSEndpoint, m.chainMiddleware(m.JWKS))
+	mux.Handle(DiscoveryEndpoint, m.chainMiddleware(m.Discovery))
 }
 
 // Start starts the MockOIDC server in its own Goroutine on the provided
@@ -113,12 +142,8 @@ func (m *MockOIDC) Start(ln net.Listener, cfg *tls.Config) error {
 		return errors.New("server already started")
 	}
 
-	handler := http.NewServeMux()
-	handler.Handle(AuthorizationEndpoint, m.chainMiddleware(m.Authorize))
-	handler.Handle(TokenEndpoint, m.chainMiddleware(m.Token))
-	handler.Handle(UserinfoEndpoint, m.chainMiddleware(m.Userinfo))
-	handler.Handle(JWKSEndpoint, m.chainMiddleware(m.JWKS))
-	handler.Handle(DiscoveryEndpoint, m.chainMiddleware(m.Discovery))
+	handler := mux.NewRouter()
+	m.AddRoutes(handler)
 
 	m.Server = &http.Server{
 		Addr:      ln.Addr().String(),
@@ -200,19 +225,19 @@ func (m *MockOIDC) Now() time.Time {
 
 // Addr returns the server address (if started)
 func (m *MockOIDC) Addr() string {
-	if m.Server == nil {
+	if m.listener == nil {
 		return ""
 	}
 	proto := "http"
 	if m.tlsConfig != nil {
 		proto = "https"
 	}
-	return fmt.Sprintf("%s://%s", proto, m.Server.Addr)
+	return fmt.Sprintf("%s://%s", proto, m.listener.Addr().String())
 }
 
 // Issuer returns the OIDC Issuer that will be in `iss` token claims
 func (m *MockOIDC) Issuer() string {
-	if m.Server == nil {
+	if m.listener == nil {
 		return ""
 	}
 	return m.Addr() + IssuerBase
@@ -220,7 +245,7 @@ func (m *MockOIDC) Issuer() string {
 
 // DiscoveryEndpoint returns the full `/.well-known/openid-configuration` URL
 func (m *MockOIDC) DiscoveryEndpoint() string {
-	if m.Server == nil {
+	if m.listener == nil {
 		return ""
 	}
 	return m.Addr() + DiscoveryEndpoint
@@ -228,7 +253,7 @@ func (m *MockOIDC) DiscoveryEndpoint() string {
 
 // AuthorizationEndpoint returns the OIDC `authorization_endpoint`
 func (m *MockOIDC) AuthorizationEndpoint() string {
-	if m.Server == nil {
+	if m.listener == nil {
 		return ""
 	}
 	return m.Addr() + AuthorizationEndpoint
@@ -236,7 +261,7 @@ func (m *MockOIDC) AuthorizationEndpoint() string {
 
 // TokenEndpoint returns the OIDC `token_endpoint`
 func (m *MockOIDC) TokenEndpoint() string {
-	if m.Server == nil {
+	if m.listener == nil {
 		return ""
 	}
 	return m.Addr() + TokenEndpoint
@@ -244,7 +269,7 @@ func (m *MockOIDC) TokenEndpoint() string {
 
 // UserinfoEndpoint returns the OIDC `userinfo_endpoint`
 func (m *MockOIDC) UserinfoEndpoint() string {
-	if m.Server == nil {
+	if m.listener == nil {
 		return ""
 	}
 	return m.Addr() + UserinfoEndpoint
@@ -252,7 +277,7 @@ func (m *MockOIDC) UserinfoEndpoint() string {
 
 // JWKSEndpoint returns the OIDC `jwks_uri`
 func (m *MockOIDC) JWKSEndpoint() string {
-	if m.Server == nil {
+	if m.listener == nil {
 		return ""
 	}
 	return m.Addr() + JWKSEndpoint
