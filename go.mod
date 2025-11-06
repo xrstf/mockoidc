@@ -5,6 +5,7 @@ go 1.22
 require (
 	github.com/go-jose/go-jose/v3 v3.0.3
 	github.com/golang-jwt/jwt/v5 v5.2.0
+	github.com/gorilla/mux v1.8.1
 	github.com/stretchr/testify v1.8.4
 )
 
