@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -104,6 +105,13 @@ func NewServer(serverConfig *ServerConfig) (*MockOIDC, error) {
 		ln = serverConfig.Listener
 	}
 
+	u, err := url.Parse(serverConfig.AddrOverride)
+	if err != nil {
+		return nil, err
+	}
+
+	addOveride := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+
 	return &MockOIDC{
 		ClientID:                      clientID,
 		ClientSecret:                  clientSecret,
@@ -115,7 +123,7 @@ func NewServer(serverConfig *ServerConfig) (*MockOIDC, error) {
 		UserQueue:                     &UserQueue{},
 		ErrorQueue:                    &ErrorQueue{},
 		listener:                      ln,
-		AddrOverride:                  serverConfig.AddrOverride,
+		AddrOverride:                  addOveride,
 	}, nil
 }
 
