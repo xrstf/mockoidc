@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -40,6 +41,11 @@ type MockOIDC struct {
 	listener    net.Listener
 	middleware  []func(http.Handler) http.Handler
 	fastForward time.Duration
+
+	// AddrOverride allows overriding the Addr() return value
+	// so clients can be configured to use a different address
+	// than the one the server is actually listening on.
+	AddrOverride string
 }
 
 // Config gives the various settings MockOIDC starts with that a test
@@ -56,9 +62,10 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Key       *rsa.PrivateKey
-	TLSConfig *tls.Config
-	Listener  net.Listener
+	Key          *rsa.PrivateKey
+	TLSConfig    *tls.Config
+	Listener     net.Listener
+	AddrOverride string
 }
 
 // NewServer configures a new MockOIDC that isn't started. An existing
@@ -98,6 +105,13 @@ func NewServer(serverConfig *ServerConfig) (*MockOIDC, error) {
 		ln = serverConfig.Listener
 	}
 
+	u, err := url.Parse(serverConfig.AddrOverride)
+	if err != nil {
+		return nil, err
+	}
+
+	addOveride := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+
 	return &MockOIDC{
 		ClientID:                      clientID,
 		ClientSecret:                  clientSecret,
@@ -109,6 +123,7 @@ func NewServer(serverConfig *ServerConfig) (*MockOIDC, error) {
 		UserQueue:                     &UserQueue{},
 		ErrorQueue:                    &ErrorQueue{},
 		listener:                      ln,
+		AddrOverride:                  addOveride,
 	}, nil
 }
 
@@ -225,6 +240,9 @@ func (m *MockOIDC) Now() time.Time {
 
 // Addr returns the server address (if started)
 func (m *MockOIDC) Addr() string {
+	if m.AddrOverride != "" {
+		return m.AddrOverride
+	}
 	if m.listener == nil {
 		return ""
 	}
